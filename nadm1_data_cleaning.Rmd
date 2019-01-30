@@ -114,6 +114,12 @@ redcap_ema_survey %>% count(ssdm2_subid)
 s_mod <- lmer(motivated ~ ladd_comm + (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
+s_mod <- lmer(stress ~ per_income + (1|day:survey), data = redcap_ema_survey)
+summary(s_mod)
+
+s_mod <- lmer(nervous ~ per_income + (1|day:survey), data = redcap_ema_survey)
+summary(s_mod)
+
 s_mod <- glmer(stress_exp ~ ladd_comm + (1|day:survey), data = redcap_ema_survey, family = "binomial")
 summary(s_mod)
 ```
@@ -121,16 +127,21 @@ summary(s_mod)
 ```{r}
 cal_stress <-
   asa_24 %>% 
-  group_by(redcap_record_id) %>% 
+  group_by(redcap_record_id, RecallNo) %>% 
   summarise(
-    mean_cal = mean(KCAL, na.rm = TRUE)
+    mean_cal = mean(CARB, na.rm = TRUE)
   ) %>% 
+  mutate(day = RecallNo) %>% 
   left_join(
     redcap_ema %>% 
-      group_by(redcap_record_id) %>% 
+      group_by(redcap_record_id, day) %>% 
       summarise(
-        mean_stress = mean(worried, na.rm = TRUE)
-      )
+        mean_stress = mean(stress, na.rm = TRUE)
+      ) %>% 
+      mutate(
+        day = as.integer(str_extract(day, "\\d"))
+      ),
+    by = c("redcap_record_id","day")
   )
 
 summary(lm(mean_cal ~ mean_stress, data = cal_stress))
