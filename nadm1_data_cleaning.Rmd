@@ -1,0 +1,61 @@
+---
+title: "NADM1 Data Cleaning"
+author: "Daniel O'Leary"
+date: "January 29, 2019"
+output: html_document
+---
+
+```{r}
+subids <-
+  read_csv("G:/My Drive/research/projects/nadm1/nadm1_data/nadm1_ssdm2_subids.csv")
+
+redcap <-
+  read_csv("G:/My Drive/research/projects/nadm1/nadm1_data/nadm1_redcap_data/nadm1_ema_01_29_1905.csv")
+
+# ssdm2_survey_data <-
+#   ssdm2_survey_data %>% 
+#   left_join(
+#     ssdm2_mcq,
+#     by = "subid"
+#   )
+ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_survey_data.csv")
+
+c_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_choices_survey.csv")
+r_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_ratings_survey.csv")
+```
+
+```{r}
+# Filter out people who didn't finish
+subids <-
+  subids %>% 
+  filter(complete == "Y")
+```
+
+```{r}
+subids$ssdm2_subid
+
+r_df_nadm %>% 
+  filter(subid %in% subids$ssdm2_subid)
+```
+
+
+```{r}
+redcap_ema <-
+  redcap %>%
+  mutate(
+    day = str_extract(redcap_event_name, "day_\\d"),
+    survey = str_extract(redcap_event_name, "survey_\\d")
+  ) %>% 
+  select(subid = user_name, day, survey, ema_survey_timestamp:ema_survey_complete) %>% 
+  filter(!is.na(day))
+```
+
+```{r}
+redcap_ema %>% 
+  ggplot(aes(survey, stress)) +
+  geom_jitter() +
+  geom_smooth()
+```
+
+
+
