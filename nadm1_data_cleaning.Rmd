@@ -34,8 +34,17 @@ subids <-
 ```{r}
 subids$ssdm2_subid
 
-r_df_nadm %>% 
-  filter(subid %in% subids$ssdm2_subid)
+ssdm2_survey_data_nadm <-
+  ssdm2_survey_data_nadm %>% 
+  filter(subid %in% c(subids$ssdm2_subid))
+
+r_df_nadm <-
+  r_df_nadm %>% 
+  filter(subid %in% c(subids$ssdm2_subid))
+
+c_df_nadm <-
+  c_df_nadm %>% 
+  filter(subid %in% c(subids$ssdm2_subid))
 ```
 
 
