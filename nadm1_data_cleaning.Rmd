@@ -114,13 +114,21 @@ redcap_ema_survey %>% count(ssdm2_subid)
 s_mod <- lmer(motivated ~ ladd_comm + (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- lmer(stress ~ per_income + (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(stress ~ per_income * erq_reap + (1|day:survey), data = redcap_ema_survey[redcap_ema_survey$per_income != 14,])
 summary(s_mod)
 
-s_mod <- lmer(nervous ~ per_income + (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(stress ~ ladd_comm + gender + (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- glmer(stress_exp ~ ladd_comm + (1|day:survey), data = redcap_ema_survey, family = "binomial")
+
+s_mod <- lmer(nervous ~ per_income * erq_reap + (1|day:survey), data = redcap_ema_survey[redcap_ema_survey$per_income != 14,])
+summary(s_mod)
+
+effect("per_income * erq_reap", s_mod) %>% as_data_frame() %>% 
+  ggplot(aes(per_income, fit, group = erq_reap, color = erq_reap)) +
+  geom_line()
+
+s_mod <- glmer(stress_exp ~ ladd_comm * scale(erq_reap) + (1|day:survey), data = redcap_ema_survey, family = "binomial")
 summary(s_mod)
 ```
 
