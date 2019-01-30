@@ -12,6 +12,9 @@ subids <-
 redcap <-
   read_csv("G:/My Drive/research/projects/nadm1/nadm1_data/nadm1_redcap_data/nadm1_ema_01_29_1905.csv")
 
+asa_24 <-
+  read_csv("G:/My Drive/research/projects/nadm1/nadm1_data/nadm1_asa24_data/nadm1_2019-01-30_80657/nadm1_2019-01-30_80657_TNS.csv")
+
 # ssdm2_survey_data <-
 #   ssdm2_survey_data %>% 
 #   left_join(
@@ -32,6 +35,16 @@ subids <-
 ```
 
 ```{r}
+asa_24 <-
+  subids %>% 
+  left_join(
+    asa_24 %>% mutate(asa24_id = UserName),
+    by = "asa24_id"
+  )
+```
+
+
+```{r}
 subids$ssdm2_subid
 
 ssdm2_survey_data_nadm <-
@@ -45,6 +58,8 @@ r_df_nadm <-
 c_df_nadm <-
   c_df_nadm %>% 
   filter(subid %in% c(subids$ssdm2_subid))
+
+
 ```
 
 
@@ -57,7 +72,13 @@ redcap_ema <-
   ) %>% 
   select(subid = user_name, day, survey, ema_survey_timestamp:ema_survey_complete) %>% 
   filter(!is.na(day))
+
+redcap_ema <-
+  redcap_ema %>% 
+  filter(subid %in% c(subids$redcap_record_id)) %>% 
+  left_join(subids %>% mutate(subid = redcap_record_id), by = "subid")
 ```
+
 
 ```{r}
 redcap_ema %>% 
@@ -66,5 +87,53 @@ redcap_ema %>%
   geom_smooth()
 ```
 
+
+```{r}
+redcap_ema_survey <-
+  redcap_ema %>% 
+  left_join(ssdm2_survey_data %>% mutate(ssdm2_subid = as.character(subid)), by = "ssdm2_subid") 
+```
+
+```{r}
+redcap_ema_survey %>% count(ssdm2_subid)
+```
+
+```{r}
+# lc_stress <-
+#   redcap_ema_survey %>% 
+#   group_by(ssdm2_subid) %>% 
+#   summarise(
+#     mean_stress = mean(stress, na.rm = TRUE),
+#     mean_happy = mean(happy, na.rm = TRUE),
+#     erq = mean(erq_reap, na.rm = TRUE),
+#     lc = mean(ladd_comm, na.rm = TRUE),
+#     per_income = mean()
+#   )
+
+
+s_mod <- lmer(motivated ~ ladd_comm + (1|day:survey), data = redcap_ema_survey)
+summary(s_mod)
+
+s_mod <- glmer(stress_exp ~ ladd_comm + (1|day:survey), data = redcap_ema_survey, family = "binomial")
+summary(s_mod)
+```
+
+```{r}
+cal_stress <-
+  asa_24 %>% 
+  group_by(redcap_record_id) %>% 
+  summarise(
+    mean_cal = mean(KCAL, na.rm = TRUE)
+  ) %>% 
+  left_join(
+    redcap_ema %>% 
+      group_by(redcap_record_id) %>% 
+      summarise(
+        mean_stress = mean(worried, na.rm = TRUE)
+      )
+  )
+
+summary(lm(mean_cal ~ mean_stress, data = cal_stress))
+```
 
 
