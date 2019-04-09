@@ -15,6 +15,9 @@ redcap <-
 asa_24 <-
   read_csv("G:/My Drive/research/projects/nadm1/nadm1_data/nadm1_asa24_data/nadm1_2019-01-30_80657/nadm1_2019-01-30_80657_TNS.csv")
 
+asa_24_total <-
+  read_csv("G:/My Drive/research/projects/nadm1/nadm1_data/nadm1_asa24_data/nadm1_2019-01-30_80657/nadm1_2019-01-30_80657_Totals.csv")
+
 # ssdm2_survey_data <-
 #   ssdm2_survey_data %>% 
 #   left_join(
@@ -40,6 +43,29 @@ asa_24 <-
   left_join(
     asa_24 %>% mutate(asa24_id = UserName),
     by = "asa24_id"
+  )
+
+asa_24 <-
+  asa_24 %>% 
+  left_join(
+    ssdm2_survey_data_nadm %>% 
+      mutate(ssdm2_subid = as.character(subid)),
+    by = "ssdm2_subid"
+  )
+
+asa_24_total <-
+  subids %>% 
+  left_join(
+    asa_24_total %>% mutate(asa24_id = UserName),
+    by = "asa24_id"
+  )
+
+asa_24_total <-
+  asa_24_total %>% 
+  left_join(
+    ssdm2_survey_data_nadm %>% 
+      mutate(ssdm2_subid = as.character(subid)),
+    by = "ssdm2_subid"
   )
 ```
 
@@ -111,16 +137,35 @@ redcap_ema_survey %>% count(ssdm2_subid)
 #   )
 
 
-s_mod <- lmer(motivated ~ ladd_comm + (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(motivated ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- lmer(stress ~ per_income * erq_reap + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey[redcap_ema_survey$per_income != 14,])
+s_mod <- lmer(stress ~ ladd_comm + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- lmer(stress ~ ladd_comm + gender + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(nervous ~ ladd_comm + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
+s_mod <- lmer(sad ~ ladd_comm + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
+summary(s_mod)
 
+s_mod <- lmer(worried ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+summary(s_mod)
+
+s_mod <- lmer(lonely ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+summary(s_mod)
+
+s_mod <- lmer(dissatisified ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+summary(s_mod)
+
+s_mod <- lmer(disappointed ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+summary(s_mod)
+
+s_mod <- lmer(anger ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+summary(s_mod)
+```
+
+```{r}
 s_mod <- lmer(nervous ~ per_income * erq_reap + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey[redcap_ema_survey$per_income != 14,])
 summary(s_mod)
 
@@ -146,17 +191,18 @@ summary(lm(coef ~ ladd_comm, data = lc_re))
 
 ```{r}
 cal_stress <-
-  asa_24 %>% 
+  asa_24_total %>% 
   group_by(redcap_record_id, RecallNo) %>% 
   summarise(
-    mean_cal = mean(CARB, na.rm = TRUE)
+    mean_sug = mean(ADD_SUGARS, na.rm = TRUE)
   ) %>% 
   mutate(day = RecallNo) %>% 
   left_join(
     redcap_ema %>% 
       group_by(redcap_record_id, day) %>% 
       summarise(
-        mean_stress = mean(stress, na.rm = TRUE)
+        mean_stress = mean(stress, na.rm = TRUE),
+        mean_worried = mean(worried, na.rm = TRUE)
       ) %>% 
       mutate(
         day = as.integer(str_extract(day, "\\d"))
@@ -164,7 +210,7 @@ cal_stress <-
     by = c("redcap_record_id","day")
   )
 
-summary(lm(mean_cal ~ mean_stress, data = cal_stress))
+summary(lmer(mean_sug ~ mean_worried + (1|redcap_record_id), data = cal_stress))
 ```
 
 
