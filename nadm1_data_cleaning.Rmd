@@ -31,6 +31,13 @@ ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_gr
 # c_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_choices_survey.csv")
 # r_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_ratings_survey.csv")
 ```
+## SES composites
+
+```{r}
+
+```
+
+
 ## Dataframe for linking subject IDs
 ```{r}
 # Filter out people who didn't finish
@@ -83,35 +90,41 @@ redcap_ema <-
   redcap %>%
   mutate(
     day = str_extract(redcap_event_name, "day_\\d"),
-    survey = str_extract(redcap_event_name, "survey_\\d")
+    survey = str_extract(redcap_event_name, "survey_\\d"),
+    ema_survey_timestamp = ymd_hms(ema_survey_timestamp),
+    weekday = wday(ema_survey_timestamp, label = TRUE)
   ) %>% 
-  select(subid = user_name, day, survey, ema_survey_timestamp:ema_survey_complete) %>% 
+  select(subid = user_name, day, weekday, survey, ema_survey_timestamp:ema_survey_complete) %>% 
   filter(!is.na(day))
 
+# Link subids to ema responses
 redcap_ema <-
   redcap_ema %>% 
   filter(subid %in% c(subids$redcap_record_id)) %>% 
   left_join(subids %>% mutate(subid = redcap_record_id), by = "subid")
-```
 
+glimpse(redcap_ema)
 
-```{r}
-redcap_ema %>% 
-  ggplot(aes(survey, stress)) +
-  geom_jitter() +
-  geom_smooth()
-```
-
-
-```{r}
+# Link survey data to ema data
 redcap_ema_survey <-
   redcap_ema %>% 
-  left_join(ssdm2_survey_data %>% mutate(ssdm2_subid = as.character(subid)), by = "ssdm2_subid") 
+  left_join(
+    ssdm2_survey_data %>% 
+      mutate(ssdm2_subid = as.character(subid)), 
+    by = "ssdm2_subid"
+  ) 
+
+# check into this!
+subs <-
+  redcap_ema_survey %>% 
+  count(ssdm2_subid)
+
+# 84, 97, 114 have too many
 ```
 
-```{r}
-redcap_ema_survey %>% count(ssdm2_subid)
-```
+
+
+
 
 ```{r}
 # lc_stress <-
@@ -200,6 +213,8 @@ cal_stress <-
   )
 
 summary(lmer(mean_sug ~ mean_worried + (1|redcap_record_id), data = cal_stress))
+
+summary(lmer(SOLID_FATS ~ ladd_comm + (1|ssdm2_subid), data = asa_24_total))
 ```
 
 
