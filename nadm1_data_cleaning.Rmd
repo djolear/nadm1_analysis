@@ -26,8 +26,10 @@ asa_24_total <-
 #   )
 ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_survey_data.csv")
 
-c_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_choices_survey.csv")
-r_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_ratings_survey.csv")
+
+# UPDATE THESE
+# c_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_choices_survey.csv")
+# r_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_ratings_survey.csv")
 ```
 ## Dataframe for linking subject IDs
 ```{r}
@@ -73,25 +75,6 @@ asa_24_total <-
       mutate(ssdm2_subid = as.character(subid)),
     by = "ssdm2_subid"
   )
-```
-
-
-```{r}
-subids$ssdm2_subid
-
-ssdm2_survey_data_nadm <-
-  ssdm2_survey_data_nadm %>% 
-  filter(subid %in% c(subids$ssdm2_subid))
-
-r_df_nadm <-
-  r_df_nadm %>% 
-  filter(subid %in% c(subids$ssdm2_subid))
-
-c_df_nadm <-
-  c_df_nadm %>% 
-  filter(subid %in% c(subids$ssdm2_subid))
-
-
 ```
 
 
