@@ -34,9 +34,90 @@ ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_gr
 ## SES composites
 
 ```{r}
+ses_comp_r_df_1 <-
+  ssdm2_survey_data_nadm %>% 
+  dplyr::select(subid, fam_income, soc_class, ladd_us, ladd_comm, father_ed, mother_ed) %>% 
+  distinct() %>% 
+  filter(
+    fam_income != 14 # & father_ed != 7 & mother_ed != 7
+  ) %>% 
+  mutate(
+    fam_income_sc = scale(fam_income),
+    soc_class_sc = scale(soc_class),
+    ladd_us_sc = scale(ladd_us),
+    ladd_comm_sc = scale(ladd_comm),
+    father_ed_sc = scale(father_ed),
+    mother_ed_sc = scale(mother_ed),
+    ses_comp1 = (fam_income_sc + soc_class_sc + ladd_us_sc + ladd_comm_sc + father_ed_sc + mother_ed_sc) / 6,
+    ses_obj1 = (fam_income_sc + father_ed_sc + mother_ed_sc) / 3,
+    ses_subj1 = (soc_class_sc + ladd_us_sc + ladd_comm_sc) / 3
+      
+  )
 
+ssdm2_survey_data_nadm <-
+  ssdm2_survey_data_nadm %>% 
+  left_join(
+    ses_comp_r_df_1 %>% 
+      dplyr::select(subid, ses_comp1, ses_obj1, ses_subj1),
+    by = "subid"
+  )
+
+ses_comp_r_df_2 <-
+  ssdm2_survey_data_nadm %>% 
+  dplyr::select(subid, fam_income, soc_class, ladd_us, ladd_comm, father_ed, mother_ed, per_income, education) %>% 
+  distinct() %>% 
+  filter(
+    fam_income != 14 & per_income != 14 
+  ) %>% 
+  mutate(
+    fam_income_sc = scale(fam_income),
+    soc_class_sc = scale(soc_class),
+    ladd_us_sc = scale(ladd_us),
+    ladd_comm_sc = scale(ladd_comm),
+    father_ed_sc = scale(father_ed),
+    mother_ed_sc = scale(mother_ed),
+    per_income_sc = scale(per_income),
+    education_sc = scale(education),
+    ses_comp_all = (fam_income_sc + soc_class_sc + ladd_us_sc + ladd_comm_sc + father_ed_sc + mother_ed_sc + per_income_sc + education_sc) / 8,
+    ses_obj_all = (fam_income_sc + father_ed_sc + mother_ed_sc + per_income_sc + education_sc) / 5,
+    ses_subj_all = (soc_class_sc + ladd_us_sc + ladd_comm_sc) / 3
+  )
+
+ssdm2_survey_data_nadm <-
+  ssdm2_survey_data_nadm %>% 
+  left_join(
+    ses_comp_r_df_2 %>% 
+      dplyr::select(subid, ses_comp_all, ses_obj_all, ses_subj_all),
+    by = "subid"
+  )
+
+ses_comp_r_df_3 <-
+  ssdm2_survey_data_nadm %>% 
+  dplyr::select(subid, soc_class, ladd_us, ladd_comm, father_ed, mother_ed, per_income) %>% 
+  distinct() %>% 
+  filter(
+    per_income != 14 
+  ) %>% 
+  mutate(
+    soc_class_sc = scale(soc_class),
+    ladd_us_sc = scale(ladd_us),
+    ladd_comm_sc = scale(ladd_comm),
+    father_ed_sc = scale(father_ed),
+    mother_ed_sc = scale(mother_ed),
+    per_income_sc = scale(per_income),
+    ses_comp_no_finc_educ = (soc_class_sc + ladd_us_sc + ladd_comm_sc + father_ed_sc + mother_ed_sc + per_income_sc) / 6,
+    ses_obj_no_finc_educ = ( father_ed_sc + mother_ed_sc + per_income_sc) / 4,
+    ses_subj_no_finc_educ = (soc_class_sc + ladd_us_sc + ladd_comm_sc) / 3
+  )
+
+ssdm2_survey_data_nadm <-
+  ssdm2_survey_data_nadm %>% 
+  left_join(
+    ses_comp_r_df_3 %>% 
+      dplyr::select(subid, ses_comp_no_finc_educ, ses_obj_no_finc_educ, ses_subj_no_finc_educ),
+    by = "subid"
+  )
 ```
-
 
 ## Dataframe for linking subject IDs
 ```{r}
@@ -214,7 +295,7 @@ cal_stress <-
 
 summary(lmer(mean_sug ~ mean_worried + (1|redcap_record_id), data = cal_stress))
 
-summary(lmer(SOLID_FATS ~ ladd_comm + (1|ssdm2_subid), data = asa_24_total))
+summary(lmer(ADD_SUGARS ~ soc_class + (1|ssdm2_subid), data = asa_24_total))
 ```
 
 
