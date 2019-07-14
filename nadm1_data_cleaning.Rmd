@@ -217,14 +217,48 @@ by_day %>%
   cor()
 ```
 
+## linear model - health beta - food groups
+
+```{r}
+lm1 <-
+  lm(
+    health_lm_beta ~
+      V_TOTAL + F_TOTAL + G_WHOLE + ADD_SUGARS,
+    data = by_day
+  )
+
+summary(lm1)
+```
 
 ##
 
 ```{r}
-y_train <-
-  finals_data %>% 
-  select(finals) %>% 
+by_day %>% 
+  ggplot(aes(health_lm_beta, V_TOTAL)) + 
+  #geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm")
+```
+
+
+
+##
+
+```{r}
+x_train <- 
+  by_day %>% 
+  select(A_DRINKS:ZINC) %>% 
   as.matrix()
+
+y_train <-
+  by_day %>% 
+  select(health_lm_beta) %>% 
+  as.matrix()
+
+data <-
+  by_day %>% 
+  select(health_lm_beta, A_DRINKS:ZINC) %>% 
+  filter_all(all_vars(!is.na(.)))
+  
 
 my_grid <- 
   expand.grid(
@@ -236,21 +270,38 @@ set.seed(42)
 
 rr_finals_fit1 <-
   train(
-    x_train,
-    y_train,
-    # finals ~ .,
-    # data = finals_data,
+    # x_train,
+    # y_train,
+    health_lm_beta ~ .,
+    data = data,
     method = "glmnet",
     preProc = c('scale','center'), 
     trControl = 
       trainControl(
         method = "cv", 
         number = 5
-      ),
-    tuneGrid = my_grid
+      )
   )
 
 rr_finals_mod1 <- rr_finals_fit1$finalModel
+
+coef(rr_finals_fit1$finalModel)
+```
+
+```{r}
+round(coef(rr_finals_fit1$finalModel, rr_finals_fit1$bestTune$lambda), 2)
+
+
+tmp_coeffs <- coef(rr_finals_fit1$finalModel, rr_finals_fit1$bestTune$lambda)
+
+coefs <- 
+  data.frame(name = tmp_coeffs@Dimnames[[1]][tmp_coeffs@i + 1], coefficient = tmp_coeffs@x)
+
+coefs %>%
+  filter(name != "(Intercept)") %>% 
+  ggplot(aes(fct_reorder(name, coefficient), coefficient)) +
+  geom_point() +
+  coord_flip()
 ```
 
 
