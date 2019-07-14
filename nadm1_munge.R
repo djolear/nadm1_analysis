@@ -62,14 +62,21 @@ redcap_ema <-
     ema_survey_timestamp = ymd_hms(ema_survey_timestamp),
     weekday = wday(ema_survey_timestamp, label = TRUE)
   ) %>% 
-  select(subid = user_name, day, weekday, survey, ema_survey_timestamp:ema_survey_complete) %>% 
+  select(redcap_id = user_name, day, weekday, survey, ema_survey_timestamp:ema_survey_complete) %>% 
   filter(!is.na(day))
 
 # Link subids to ema responses
 redcap_ema <-
   redcap_ema %>% 
-  filter(subid %in% c(subids$redcap_record_id)) %>% 
-  left_join(subids %>% mutate(subid = redcap_record_id), by = "subid")
+  filter(redcap_id %in% c(subids$redcap_record_id)) %>% 
+  left_join(
+    subids %>% 
+      mutate(redcap_id = redcap_record_id), 
+    by = "redcap_id"
+  ) %>% 
+  mutate(
+    subid = as.numeric(ssdm2_subid)
+  )
 
 glimpse(redcap_ema)
 
@@ -77,10 +84,9 @@ glimpse(redcap_ema)
 redcap_ema_survey <-
   redcap_ema %>% 
   left_join(
-    ssdm2_survey_data_nadm %>% 
-      mutate(ssdm2_subid = as.character(subid)), 
-    by = "ssdm2_subid"
-  ) 
+    ssdm2_survey_data_nadm, 
+    by = "subid"
+  )
 
 # check into this!
 subs <-
