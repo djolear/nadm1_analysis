@@ -41,7 +41,9 @@ asa_24_total <-
 #     ssdm2_mcq,
 #     by = "subid"
 #   )
-ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_survey_data_new.csv")
+ssdm2_survey_data_nadm <- 
+  read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_survey_data_new.csv") %>% 
+  mutate(subid = as.numeric(subid))
 
 
 # UPDATE THESE
@@ -56,7 +58,9 @@ asa_24_total %>%
     ses_comp_all,
     ses_subj1,
     ladd_comm,
-    ladd_us,
+    panas_neg,
+    stai_trait,
+    hese,
     KCAL:A_DRINKS
   ) %>% 
   filter_all(
@@ -68,19 +72,24 @@ asa_24_total %>%
 ```{r}
 # ASA 24 by day
 
-asas_24_by_day <-
+asa_24_by_day <-
   asa_24_total %>% 
   dplyr::select(
     subid = ssdm2_subid,
     day = ReportingDate,
     KCAL:A_DRINKS
   ) %>% 
+  mutate(
+    date = mdy(day)
+  ) %>% 
   gather(food, amt, KCAL:A_DRINKS) %>% 
-  group_by(subid, day, food) %>% 
+  group_by(subid, date, food) %>% 
   summarise(
-    mean = mean(amt, na.rm = TRUE),
-    sd = sd(amt, na.rm = TRUE)
-  )
+    mean = mean(amt, na.rm = TRUE)
+    #sd = sd(amt, na.rm = TRUE)
+  ) %>% 
+  ungroup() %>% 
+  spread(food, mean)
 
 asa_24_avg <-
   asa_24_total %>% 
@@ -91,7 +100,7 @@ asa_24_avg <-
   gather(food, amt, KCAL:A_DRINKS) %>% 
   group_by(subid, food) %>% 
   summarise(
-    mean = mean(amt, na.rm = TRUE),
+    mean = mean(amt, na.rm = TRUE)
     #sd = sd(amt, na.rm = TRUE)
   )  %>% 
   ungroup() %>% 
@@ -107,7 +116,153 @@ asa_24_avg <-
 ```
 
 ```{r}
+redcap_by_day <-
+  redcap_ema %>% 
+  dplyr::select(
+    subid,
+    ema_survey_timestamp,
+    anger:motivated
+  ) %>% 
+  mutate(
+    date = date(ema_survey_timestamp),
+    subid = as.numeric(subid)
+  ) %>% 
+  dplyr::select(-ema_survey_timestamp) %>% 
+  gather(emotion, value, anger:motivated) %>% 
+  group_by(subid, date, emotion) %>% 
+  summarise(
+    mean = mean(value, na.rm = TRUE)
+  ) %>% 
+  ungroup() %>% 
+  spread(emotion, mean)
+```
 
+## by day DF
+
+```{r}
+by_day <-
+  redcap_by_day %>% 
+  filter(!is.na(date)) %>% 
+  left_join(
+    asa_24_by_day,
+    by = c("subid", "date")
+  ) %>% 
+  left_join(
+    ssdm2_survey_data_nadm,
+    by = "subid"
+  )
+```
+
+
+## EMA emotions and SES
+
+```{r}
+by_day %>% 
+  dplyr::select(
+    ses_comp_all,
+    ses_subj1,
+    ladd_comm,
+    food_cost_1,
+    alert:worried
+  ) %>% 
+  filter_all(all_vars(!is.na(.))) %>% 
+  cor()
+```
+
+## SES and food
+
+```{r}
+by_day %>% 
+  dplyr::select(
+    ses_comp_all,
+    ses_subj1,
+    ladd_comm,
+    food_cost_1,
+    A_DRINKS:ZINC
+  ) %>% 
+  filter_all(all_vars(!is.na(.))) %>% 
+  cor()
+```
+
+
+## Betas and food
+
+```{r}
+
+by_day %>% 
+  dplyr::select(
+    health_lm_beta,
+    taste_lm_beta,
+    A_DRINKS:ZINC
+  ) %>% 
+  filter_all(all_vars(!is.na(.))) %>% 
+  cor()
+```
+
+
+## EMA emotions and food
+
+```{r}
+by_day %>% 
+  dplyr::select(
+    alert:worried,
+    KCAL,
+    V_TOTAL,
+    V_DRKGR,
+    F_TOTAL,
+    ADD_SUGARS,
+    SOLID_FATS
+  ) %>% 
+  filter_all(all_vars(!is.na(.))) %>% 
+  cor()
+```
+
+
+##
+
+```{r}
+y_train <-
+  finals_data %>% 
+  select(finals) %>% 
+  as.matrix()
+
+my_grid <- 
+  expand.grid(
+    alpha = 0:1,
+    lambda = seq(0.0001, 1, length = 20)
+  )
+
+set.seed(42)
+
+rr_finals_fit1 <-
+  train(
+    x_train,
+    y_train,
+    # finals ~ .,
+    # data = finals_data,
+    method = "glmnet",
+    preProc = c('scale','center'), 
+    trControl = 
+      trainControl(
+        method = "cv", 
+        number = 5
+      ),
+    tuneGrid = my_grid
+  )
+
+rr_finals_mod1 <- rr_finals_fit1$finalModel
+```
+
+
+```{r}
+lm1 <-
+  lm(
+    V_DRKGR ~
+      motivated,
+    data = by_day
+  )
+
+summary(lm1)
 ```
 
 
@@ -115,7 +270,21 @@ asa_24_avg <-
 lm1 <-
   lm(
     ADD_SUGARS ~
-      panas_neg,
+      cesd,
+    data = asa_24_avg
+  )
+
+summary(lm1)
+```
+
+
+
+
+```{r}
+lm1 <-
+  lm(
+    ADD_SUGARS ~
+      cesd,
     data = asa_24_avg
   )
 
