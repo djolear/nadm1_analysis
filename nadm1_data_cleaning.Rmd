@@ -48,246 +48,82 @@ ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_gr
 # c_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_choices_survey.csv")
 # r_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_ratings_survey.csv")
 ```
-## SES composites
+
 
 ```{r}
-ses_comp_r_df_1 <-
-  ssdm2_survey_data_nadm %>% 
-  dplyr::select(subid, fam_income, soc_class, ladd_us, ladd_comm, father_ed, mother_ed) %>% 
-  distinct() %>% 
-  filter(
-    fam_income != 14 # & father_ed != 7 & mother_ed != 7
+asa_24_total %>% 
+  dplyr::select(
+    ses_comp_all,
+    ses_subj1,
+    ladd_comm,
+    ladd_us,
+    KCAL:A_DRINKS
   ) %>% 
-  mutate(
-    fam_income_sc = scale(fam_income),
-    soc_class_sc = scale(soc_class),
-    ladd_us_sc = scale(ladd_us),
-    ladd_comm_sc = scale(ladd_comm),
-    father_ed_sc = scale(father_ed),
-    mother_ed_sc = scale(mother_ed),
-    ses_comp1 = (fam_income_sc + soc_class_sc + ladd_us_sc + ladd_comm_sc + father_ed_sc + mother_ed_sc) / 6,
-    ses_obj1 = (fam_income_sc + father_ed_sc + mother_ed_sc) / 3,
-    ses_subj1 = (soc_class_sc + ladd_us_sc + ladd_comm_sc) / 3
-      
-  )
-
-ssdm2_survey_data_nadm <-
-  ssdm2_survey_data_nadm %>% 
-  left_join(
-    ses_comp_r_df_1 %>% 
-      dplyr::select(subid, ses_comp1, ses_obj1, ses_subj1),
-    by = "subid"
-  )
-
-ses_comp_r_df_2 <-
-  ssdm2_survey_data_nadm %>% 
-  dplyr::select(subid, fam_income, soc_class, ladd_us, ladd_comm, father_ed, mother_ed, per_income, education) %>% 
-  distinct() %>% 
-  filter(
-    fam_income != 14 & per_income != 14 
+  filter_all(
+    all_vars(!is.na(.))
   ) %>% 
-  mutate(
-    fam_income_sc = scale(fam_income),
-    soc_class_sc = scale(soc_class),
-    ladd_us_sc = scale(ladd_us),
-    ladd_comm_sc = scale(ladd_comm),
-    father_ed_sc = scale(father_ed),
-    mother_ed_sc = scale(mother_ed),
-    per_income_sc = scale(per_income),
-    education_sc = scale(education),
-    ses_comp_all = (fam_income_sc + soc_class_sc + ladd_us_sc + ladd_comm_sc + father_ed_sc + mother_ed_sc + per_income_sc + education_sc) / 8,
-    ses_obj_all = (fam_income_sc + father_ed_sc + mother_ed_sc + per_income_sc + education_sc) / 5,
-    ses_subj_all = (soc_class_sc + ladd_us_sc + ladd_comm_sc) / 3
-  )
-
-ssdm2_survey_data_nadm <-
-  ssdm2_survey_data_nadm %>% 
-  left_join(
-    ses_comp_r_df_2 %>% 
-      dplyr::select(subid, ses_comp_all, ses_obj_all, ses_subj_all),
-    by = "subid"
-  )
-
-ses_comp_r_df_3 <-
-  ssdm2_survey_data_nadm %>% 
-  dplyr::select(subid, soc_class, ladd_us, ladd_comm, father_ed, mother_ed, per_income) %>% 
-  distinct() %>% 
-  filter(
-    per_income != 14 
-  ) %>% 
-  mutate(
-    soc_class_sc = scale(soc_class),
-    ladd_us_sc = scale(ladd_us),
-    ladd_comm_sc = scale(ladd_comm),
-    father_ed_sc = scale(father_ed),
-    mother_ed_sc = scale(mother_ed),
-    per_income_sc = scale(per_income),
-    ses_comp_no_finc_educ = (soc_class_sc + ladd_us_sc + ladd_comm_sc + father_ed_sc + mother_ed_sc + per_income_sc) / 6,
-    ses_obj_no_finc_educ = ( father_ed_sc + mother_ed_sc + per_income_sc) / 4,
-    ses_subj_no_finc_educ = (soc_class_sc + ladd_us_sc + ladd_comm_sc) / 3
-  )
-
-ssdm2_survey_data_nadm <-
-  ssdm2_survey_data_nadm %>% 
-  left_join(
-    ses_comp_r_df_3 %>% 
-      dplyr::select(subid, ses_comp_no_finc_educ, ses_obj_no_finc_educ, ses_subj_no_finc_educ),
-    by = "subid"
-  )
-```
-
-## Dataframe for linking subject IDs
-```{r}
-# Filter out people who didn't finish
-subids <-
-  subids %>% 
-  filter(complete == "Y") %>% 
-  select(-complete)
+  cor()
 ```
 
 ```{r}
-# Link subids to asa24
-asa_24 <-
-  subids %>% 
-  left_join(
-    asa_24 %>% mutate(asa24_id = UserName),
-    by = "asa24_id"
-  )
+# ASA 24 by day
 
-# Link ssdm2 survey to asa24
-asa_24 <-
-  asa_24 %>% 
-  left_join(
-    ssdm2_survey_data_nadm %>% 
-      mutate(ssdm2_subid = as.character(subid)),
-    by = "ssdm2_subid"
-  )
-
-
-# Link subids to asa24 totals
-asa_24_total <-
-  subids %>% 
-  left_join(
-    asa_24_total %>% mutate(asa24_id = UserName),
-    by = "asa24_id"
-  )
-
-# Link ssdm2 survey to asa24 totals
-asa_24_total <-
+asas_24_by_day <-
   asa_24_total %>% 
-  left_join(
-    ssdm2_survey_data_nadm %>% 
-      mutate(ssdm2_subid = as.character(subid)),
-    by = "ssdm2_subid"
-  )
-```
-
-
-```{r}
-redcap_ema <-
-  redcap %>%
-  mutate(
-    day = str_extract(redcap_event_name, "day_\\d"),
-    survey = str_extract(redcap_event_name, "survey_\\d"),
-    ema_survey_timestamp = ymd_hms(ema_survey_timestamp),
-    weekday = wday(ema_survey_timestamp, label = TRUE)
+  dplyr::select(
+    subid = ssdm2_subid,
+    day = ReportingDate,
+    KCAL:A_DRINKS
   ) %>% 
-  select(subid = user_name, day, weekday, survey, ema_survey_timestamp:ema_survey_complete) %>% 
-  filter(!is.na(day))
-
-# Link subids to ema responses
-redcap_ema <-
-  redcap_ema %>% 
-  filter(subid %in% c(subids$redcap_record_id)) %>% 
-  left_join(subids %>% mutate(subid = redcap_record_id), by = "subid")
-
-glimpse(redcap_ema)
-
-# Link survey data to ema data
-redcap_ema_survey <-
-  redcap_ema %>% 
-  left_join(
-    ssdm2_survey_data_nadm %>% 
-      mutate(ssdm2_subid = as.character(subid)), 
-    by = "ssdm2_subid"
-  ) 
-
-# check into this!
-subs <-
-  redcap_ema_survey %>% 
-  count(ssdm2_subid)
-
-# 84, 97, 114 have too many
-```
-
-
-
-
-
-```{r}
-# lc_stress <-
-#   redcap_ema_survey %>% 
-#   group_by(ssdm2_subid) %>% 
-#   summarise(
-#     mean_stress = mean(stress, na.rm = TRUE),
-#     mean_happy = mean(happy, na.rm = TRUE),
-#     erq = mean(erq_reap, na.rm = TRUE),
-#     lc = mean(ladd_comm, na.rm = TRUE),
-#     per_income = mean()
-#   )
-
-
-s_mod <- lmer(motivated ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
-summary(s_mod)
-
-s_mod <- lmer(stress ~ ses_subj_all + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
-summary(s_mod)
-
-s_mod <- lmer(nervous ~ ses_subj_all + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
-summary(s_mod)
-
-s_mod <- lmer(sad ~ ses_subj_all + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
-summary(s_mod)
-
-s_mod <- lmer(worried ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
-summary(s_mod)
-
-s_mod <- lmer(lonely ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
-summary(s_mod)
-
-s_mod <- lmer(dissatisified ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
-summary(s_mod)
-
-s_mod <- lmer(disappointed ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
-summary(s_mod)
-
-s_mod <- lmer(anger ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
-summary(s_mod)
-```
-
-```{r}
-s_mod <- lmer(nervous ~ ladd_comm * erq_reap + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey[redcap_ema_survey$per_income != 14,])
-summary(s_mod)
-
-effect("per_income * erq_reap", s_mod) %>% as_data_frame() %>% 
-  ggplot(aes(per_income, fit, group = erq_reap, color = erq_reap)) +
-  geom_line()
-
-s_mod <- glmer(stress_exp ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey, family = "binomial")
-summary(s_mod)
-
-mod <- summary(s_mod)
-lc_re <- data.frame(coef = coef(s_mod)$ssdm2_subid[,1])
-lc_re$subid <- as.integer(rownames(coef(s_mod)$ssdm2_subid))
-
-lc_re <-
-  lc_re %>% 
-  left_join(
-    ssdm2_survey_data %>% select(subid, ladd_comm), by = "subid"
+  gather(food, amt, KCAL:A_DRINKS) %>% 
+  group_by(subid, day, food) %>% 
+  summarise(
+    mean = mean(amt, na.rm = TRUE),
+    sd = sd(amt, na.rm = TRUE)
   )
 
-summary(lm(coef ~ ladd_comm, data = lc_re))
+asa_24_avg <-
+  asa_24_total %>% 
+  dplyr::select(
+    subid = ssdm2_subid,
+    KCAL:A_DRINKS
+  ) %>% 
+  gather(food, amt, KCAL:A_DRINKS) %>% 
+  group_by(subid, food) %>% 
+  summarise(
+    mean = mean(amt, na.rm = TRUE),
+    #sd = sd(amt, na.rm = TRUE)
+  )  %>% 
+  ungroup() %>% 
+  spread(food, mean)
+
+asa_24_avg <-
+  asa_24_avg %>% 
+  mutate(subid = as.numeric(subid)) %>% 
+  left_join(
+    ssdm2_survey_data_nadm,
+    by = "subid"
+  )
 ```
+
+```{r}
+
+```
+
+
+```{r}
+lm1 <-
+  lm(
+    ADD_SUGARS ~
+      panas_neg,
+    data = asa_24_avg
+  )
+
+summary(lm1)
+```
+
+
+
 
 ```{r}
 cal_stress <-
