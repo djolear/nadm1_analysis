@@ -16,7 +16,8 @@ ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_gr
 subids <-
   subids %>% 
   filter(complete == "Y") %>% 
-  select(-complete)
+  select(-complete) %>% 
+  mutate(subid = as.numeric(subid))
 
 # Link subids to asa24
 asa_24 <-
@@ -42,7 +43,7 @@ asa_24_total <-
   left_join(
     asa_24_total %>% mutate(asa24_id = UserName),
     by = "asa24_id"
-  )
+  ) 
 
 # Link ssdm2 survey to asa24 totals
 asa_24_total <-
