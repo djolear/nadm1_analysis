@@ -217,6 +217,7 @@ by_day %>%
   cor()
 ```
 
+
 ## linear model - health beta - food groups
 
 ```{r}
@@ -224,6 +225,16 @@ lm1 <-
   lm(
     health_lm_beta ~
       V_TOTAL + F_TOTAL + G_WHOLE + ADD_SUGARS,
+    data = by_day
+  )
+
+summary(lm1)
+
+lm1 <-
+  lmer(
+    V_TOTAL ~
+      health_lm_beta +
+      (1|subid) + (1|date),
     data = by_day
   )
 
@@ -256,7 +267,7 @@ y_train <-
 
 data <-
   by_day %>% 
-  select(health_lm_beta, A_DRINKS:ZINC) %>% 
+  select(ses_subj1, A_DRINKS:ZINC) %>% 
   filter_all(all_vars(!is.na(.)))
   
 
@@ -272,7 +283,7 @@ rr_finals_fit1 <-
   train(
     # x_train,
     # y_train,
-    health_lm_beta ~ .,
+    ses_subj1 ~ .,
     data = data,
     method = "glmnet",
     preProc = c('scale','center'), 
@@ -284,8 +295,6 @@ rr_finals_fit1 <-
   )
 
 rr_finals_mod1 <- rr_finals_fit1$finalModel
-
-coef(rr_finals_fit1$finalModel)
 ```
 
 ```{r}
