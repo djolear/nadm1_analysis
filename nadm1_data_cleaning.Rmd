@@ -2,9 +2,26 @@
 title: "NADM1 Data Cleaning"
 author: "Daniel O'Leary"
 date: "January 29, 2019"
-output: html_document
+output: 
+  github_document:
+    toc: true
 ---
 
+# Setup
+
+## Load Packages
+```{r setup, include=FALSE}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(
+  tidyverse, 
+  haven, 
+  lubridate,
+  survival, survminer, simPH, effects
+)
+```
+
+
+## Load Data
 ```{r}
 subids <-
   read_csv("G:/My Drive/research/projects/nadm1/nadm1_data/nadm1_ssdm2_subids.csv")
@@ -24,7 +41,7 @@ asa_24_total <-
 #     ssdm2_mcq,
 #     by = "subid"
 #   )
-ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_survey_data.csv")
+ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_survey_data_new.csv")
 
 
 # UPDATE THESE
@@ -190,7 +207,7 @@ glimpse(redcap_ema)
 redcap_ema_survey <-
   redcap_ema %>% 
   left_join(
-    ssdm2_survey_data %>% 
+    ssdm2_survey_data_nadm %>% 
       mutate(ssdm2_subid = as.character(subid)), 
     by = "ssdm2_subid"
   ) 
@@ -220,36 +237,36 @@ subs <-
 #   )
 
 
-s_mod <- lmer(motivated ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(motivated ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- lmer(stress ~ ladd_comm + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(stress ~ ses_subj_all + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- lmer(nervous ~ ladd_comm + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(nervous ~ ses_subj_all + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- lmer(sad ~ ladd_comm + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(sad ~ ses_subj_all + (1|ssdm2_subid) +  (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- lmer(worried ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(worried ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- lmer(lonely ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(lonely ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- lmer(dissatisified ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(dissatisified ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- lmer(disappointed ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(disappointed ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 
-s_mod <- lmer(anger ~ ladd_comm + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
+s_mod <- lmer(anger ~ ses_subj_all + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey)
 summary(s_mod)
 ```
 
 ```{r}
-s_mod <- lmer(nervous ~ per_income * erq_reap + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey[redcap_ema_survey$per_income != 14,])
+s_mod <- lmer(nervous ~ ladd_comm * erq_reap + (1|ssdm2_subid) + (1|day:survey), data = redcap_ema_survey[redcap_ema_survey$per_income != 14,])
 summary(s_mod)
 
 effect("per_income * erq_reap", s_mod) %>% as_data_frame() %>% 
@@ -277,7 +294,7 @@ cal_stress <-
   asa_24_total %>% 
   group_by(redcap_record_id, RecallNo) %>% 
   summarise(
-    mean_sug = mean(ADD_SUGARS, na.rm = TRUE)
+    mean_v = mean(V_TOTAL, na.rm = TRUE)
   ) %>% 
   mutate(day = RecallNo) %>% 
   left_join(
@@ -293,9 +310,26 @@ cal_stress <-
     by = c("redcap_record_id","day")
   )
 
-summary(lmer(mean_sug ~ mean_worried + (1|redcap_record_id), data = cal_stress))
+summary(lmer(mean_v ~ mean_stress + (1|redcap_record_id), data = cal_stress))
 
-summary(lmer(ADD_SUGARS ~ soc_class + (1|ssdm2_subid), data = asa_24_total))
+summary(lmer(V_TOTAL ~ gen_eating_15 + (1|ssdm2_subid), data = asa_24_total))
 ```
 
+```{r}
+asa_24_total <-
+  asa_24_total %>% 
+  left_join(
+    rating_lm_betas,
+    by = "subid"
+  )
+
+summary(lmer(FIBE ~ health_lm_beta + taste_lm_beta + (1|ssdm2_subid), data = asa_24_total))
+summary(lmer(V_TOTAL ~ health_lm_beta + taste_lm_beta + (1|ssdm2_subid), data = asa_24_total))
+summary(lmer(ADD_SUGARS ~ health_lm_beta + taste_lm_beta + (1|ssdm2_subid), data = asa_24_total))
+summary(lmer(G_REFINED ~ health_lm_beta + taste_lm_beta + (1|ssdm2_subid), data = asa_24_total))
+summary(lmer(F_TOTAL ~ health_lm_beta + taste_lm_beta + (1|ssdm2_subid), data = asa_24_total))
+summary(lmer(SUGR ~ health_lm_beta + taste_lm_beta + (1|ssdm2_subid), data = asa_24_total))
+summary(lmer(SOLID_FATS ~ health_lm_beta + taste_lm_beta + (1|ssdm2_subid), data = asa_24_total))
+
+```
 
