@@ -10,7 +10,7 @@ asa_24 <-
 asa_24_total <-
   read_csv("G:/My Drive/research/projects/nadm1/nadm1_data/nadm1_asa24_data/nadm1_2019-01-30_80657/nadm1_2019-01-30_80657_Totals.csv")
 
-ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_survey_data_new.csv")
+ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_survey_data.csv")
 
 # Filter out people who didn't finish
 subids <-

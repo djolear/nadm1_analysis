@@ -15,8 +15,7 @@ if (!require("pacman")) install.packages("pacman")
 pacman::p_load(
   tidyverse, 
   haven, 
-  lubridate,
-  survival, survminer, simPH, effects
+  lubridate
 )
 ```
 
@@ -41,6 +40,7 @@ asa_24_total <-
 #     ssdm2_mcq,
 #     by = "subid"
 #   )
+
 ssdm2_survey_data_nadm <- 
   read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_survey_data_new.csv") %>% 
   mutate(subid = as.numeric(subid))
@@ -56,18 +56,89 @@ ssdm2_survey_data_nadm <-
 asa_24_total %>% 
   dplyr::select(
     ses_comp_all,
-    ses_subj1,
+    ses_subj_all,
     ladd_comm,
     panas_neg,
     stai_trait,
     hese,
+    effexp,
+    health_lm_beta,
+    taste_lm_beta,
     KCAL:A_DRINKS
   ) %>% 
   filter_all(
     all_vars(!is.na(.))
   ) %>% 
-  cor()
+  cor() %>% 
+  round(., 2)
 ```
+
+```{r}
+lm1 <-
+  lmer(
+    V_TOTAL ~
+      ladd_comm +
+      (1|subid),
+    data = asa_24_total
+  )
+
+summary(lm1)
+```
+
+
+## mediation - 
+
+```{r}
+data <- 
+  data.frame(
+    X = asa_24_total$ladd_comm, 
+    Y = asa_24_total$V_TOTAL, 
+    M1 = asa_24_total$effexp, 
+    M2 = asa_24_total$stai_trait
+  )
+
+model <- 
+  '
+    # direct effect
+    Y ~ b1 * M1 + b2 * M2 + c * X
+    
+    # mediator
+    M1 ~ a1 * X
+    M2 ~ a2 * X
+    
+    
+    # direct effect
+    direct := c
+    
+    # indirect effect (a*b)
+    indirect1 := a1 * b1
+    indirect2 := a2 * b2
+    
+    
+    # total effect
+    total := c + (a1 * b1) + (a2 * b2)  
+    prop_mediated := (abs(indirect1) + abs(indirect2) )/abs(total)
+    
+    # covariances
+    
+    M1 ~~ M2
+
+'
+fit <- 
+  sem(
+    model, 
+    data = data
+  )
+
+summary(
+  fit, 
+  standardized = TRUE, 
+  fit.measures = T, 
+  rsq = T
+)
+```
+
+
 
 ```{r}
 # ASA 24 by day
@@ -144,7 +215,7 @@ by_day <-
   redcap_by_day %>% 
   filter(!is.na(date)) %>% 
   left_join(
-    asa_24_by_day,
+    asa_24_by_day %>% mutate(subid = as.numeric(subid)),
     by = c("subid", "date")
   ) %>% 
   left_join(
@@ -166,8 +237,31 @@ by_day %>%
     alert:worried
   ) %>% 
   filter_all(all_vars(!is.na(.))) %>% 
-  cor()
+  cor() %>% 
+  round(., 2)
 ```
+
+```{r}
+lm1 <-
+  lm(
+    positive ~
+      ladd_comm, 
+    data = by_day
+  )
+
+summary(lm1)
+
+lm1 <-
+  lmer(
+    positive ~
+      ladd_comm +
+      (1|subid), 
+    data = by_day
+  )
+
+summary(lm1)
+```
+
 
 ## SES and food
 
@@ -175,13 +269,14 @@ by_day %>%
 by_day %>% 
   dplyr::select(
     ses_comp_all,
-    ses_subj1,
+    ses_subj_all,
     ladd_comm,
     food_cost_1,
     A_DRINKS:ZINC
   ) %>% 
   filter_all(all_vars(!is.na(.))) %>% 
-  cor()
+  cor() %>% 
+  round(., 2)
 ```
 
 
@@ -198,6 +293,30 @@ by_day %>%
   filter_all(all_vars(!is.na(.))) %>% 
   cor()
 ```
+
+```{r}
+lm1 <-
+  lmer(
+    V_TOTAL ~
+      ladd_comm +
+      (1|subid) + (1|date),
+    data = by_day
+  )
+
+summary(lm1)
+
+lm1 <-
+  lmer(
+    V_DRKGR ~
+      ladd_comm +
+      (1|subid) + (1|date),
+    data = by_day
+  )
+
+summary(lm1)
+```
+
+
 
 
 ## EMA emotions and food
@@ -318,7 +437,7 @@ coefs %>%
 lm1 <-
   lm(
     V_DRKGR ~
-      motivated,
+      positive,
     data = by_day
   )
 
