@@ -58,6 +58,8 @@ asa_24_total %>%
     ses_comp_all,
     ses_subj_all,
     ladd_comm,
+    soc_class,
+    ladd_us,
     panas_neg,
     stai_trait,
     hese,
@@ -69,9 +71,83 @@ asa_24_total %>%
   filter_all(
     all_vars(!is.na(.))
   ) %>% 
+  mutate(
+    healthy = (scale(F_TOTAL) + scale(V_TOTAL) + scale(G_WHOLE) - scale(ADD_SUGARS)) / 4
+  ) %>% 
+  cor() %>% 
+  round(., 2)
+
+asa_24 %>% 
+  dplyr::select(
+    ses_comp_all,
+    ses_subj_all,
+    ladd_comm,
+    soc_class,
+    ladd_us,
+    panas_neg,
+    stai_trait,
+    hese,
+    effexp,
+    health_lm_beta,
+    taste_lm_beta,
+    KCAL:B12_ADD
+  ) %>% 
+  filter_all(
+    all_vars(!is.na(.))
+  ) %>% 
   cor() %>% 
   round(., 2)
 ```
+
+```{r}
+asa_24_total_group <-
+  asa_24_total %>% 
+  mutate(
+    healthy = (scale(F_TOTAL) + scale(V_TOTAL) + scale(G_WHOLE) - scale(ADD_SUGARS)) / 4
+  ) %>% 
+  group_by(subid) %>% 
+  summarise(
+    mean_health = mean(healthy, na.rm = TRUE)
+  ) %>% 
+  left_join(
+    ssdm2_survey_data_nadm %>% 
+      select(
+        subid, 
+        ses_comp_all,
+        ses_subj_all,
+        ladd_comm
+      ),
+    by = "subid"
+  )
+
+summary(lm(mean_health ~ ses_comp_all, data = asa_24_total_group))
+```
+
+```{r}
+lm1 <-
+  lmer(
+    healthy ~
+      ses_subj_all + 
+      (1|subid) +
+      (1|ReportingDate),
+    data = asa_24_total
+  )
+
+summary(lm1)
+
+lm1 <-
+  lmer(
+    V_TOTAL ~
+      ses_subj_all + 
+      (1|subid) +
+      (1|ReportingDate),
+    data = asa_24_total %>% filter(V_TOTAL < mean(V_TOTAL, na.rm = TRUE) + 4 * sd (V_TOTAL, na.rm = TRUE))
+  )
+
+summary(lm1)
+```
+
+
 
 ```{r}
 lm1 <-

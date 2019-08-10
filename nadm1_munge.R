@@ -1,3 +1,6 @@
+
+library(tidyverse, lubridate)
+
 subids <-
   read_csv("G:/My Drive/research/projects/nadm1/nadm1_data/nadm1_ssdm2_subids.csv")
 
@@ -60,8 +63,8 @@ redcap_ema <-
   mutate(
     day = str_extract(redcap_event_name, "day_\\d"),
     survey = str_extract(redcap_event_name, "survey_\\d"),
-    ema_survey_timestamp = ymd_hms(ema_survey_timestamp),
-    weekday = wday(ema_survey_timestamp, label = TRUE)
+    ema_survey_timestamp = lubridate::ymd_hms(ema_survey_timestamp),
+    weekday = lubridate::wday(ema_survey_timestamp, label = TRUE)
   ) %>% 
   select(redcap_id = user_name, day, weekday, survey, ema_survey_timestamp:ema_survey_complete) %>% 
   filter(!is.na(day))
