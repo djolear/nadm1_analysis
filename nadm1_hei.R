@@ -8,7 +8,8 @@ asa_24_total %>%
     f_total = ( F_TOTAL ) / (KCAL / 1000),
     fwholefrt = ( F_OTHER ) / (KCAL / 1000),
     sfat_perc = 100 * (SFAT * 9 / KCAL),
-    add_sugars_per = 100 * (ADD_SUGARS * 16 / KCAL) 
+    add_sugars_per = 100 * (ADD_SUGARS * 16 / KCAL),
     
-  ) %>% 
-  select(vdrkgrleg)
+    hei = vtotalleg + vdrkgrleg
+    
+  ) 
