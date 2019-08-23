@@ -50,10 +50,18 @@ ssdm2_survey_data_nadm <-
 # c_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_choices_survey.csv")
 # r_df_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_group_data/ssdm2_ratings_survey.csv")
 ```
+49 is fasting
+
+```{r}
+low_cals <- asa_24_total %>% filter(complete == "Y") %>% group_by(subid) %>% summarise(cals = mean(KCAL, na.rm = TRUE)) %>% filter(cals < 900)
+```
+
 
 
 ```{r}
 asa_24_total %>% 
+  filter(complete == "Y") %>% 
+  filter(subid %!in% low_cals$subid) %>% 
   dplyr::select(
     ses_comp_all,
     ses_subj_all,
@@ -72,7 +80,14 @@ asa_24_total %>%
     all_vars(!is.na(.))
   ) %>% 
   mutate(
-    healthy = (scale(F_TOTAL) + scale(V_TOTAL) + scale(G_WHOLE) - scale(ADD_SUGARS)) / 4
+    vtotalleg = ( V_TOTAL + V_LEGUMES ) / (KCAL / 1000),
+    vdrkgrleg = ( V_LEGUMES + V_DRKGR) / (KCAL / 1000),
+    f_total = ( F_TOTAL ) / (KCAL / 1000),
+    fwholefrt = ( F_OTHER ) / (KCAL / 1000),
+    add_sugars_per = 100 * (ADD_SUGARS * 16 / KCAL), 
+    sfat_perc = 100 * (SFAT * 9 / KCAL),
+    
+    hei = vtotalleg + vdrkgrleg + f_total + fwholefrt
   ) %>% 
   cor() %>% 
   round(., 2)
@@ -103,7 +118,7 @@ asa_24 %>%
 asa_24_total_group <-
   asa_24_total %>% 
   mutate(
-    healthy = (scale(F_TOTAL) + scale(V_TOTAL) + scale(G_WHOLE) - scale(ADD_SUGARS)) / 4
+    healthy = (F_TOTAL/KCAL + V_TOTAL/KCAL + G_WHOLE/KCAL - ADD_SUGARS/KCAL) / 4
   ) %>% 
   group_by(subid) %>% 
   summarise(
