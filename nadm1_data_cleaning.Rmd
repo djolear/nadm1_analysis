@@ -80,10 +80,22 @@ asa_24_total %>%
     all_vars(!is.na(.))
   ) %>% 
   mutate(
-    vtotalleg = ( V_TOTAL + V_LEGUMES ) / (KCAL / 1000),
-    vdrkgrleg = ( V_LEGUMES + V_DRKGR) / (KCAL / 1000),
+    VEGDEN = ( V_TOTAL + V_LEGUMES ) / (KCAL / 1000),
+    HEI2015C1_TOTALVEG=5*(VEGDEN/1.1),
+    GRBNDEN = ( V_LEGUMES + V_DRKGR) / (KCAL / 1000),
+    HEI2015C2_GREEN_AND_BEAN=5*(GRBNDEN/0.2),
+    
     f_total = ( F_TOTAL ) / (KCAL / 1000),
     fwholefrt = ( F_OTHER ) / (KCAL / 1000),
+    g_whole = ( G_WHOLE ) / (KCAL / 1000),
+    d_total = ( D_TOTAL ) / (KCAL / 1000),
+    pfallprotleg,
+    pfseaplantleg,
+    monopoly,
+    satfat,
+    sodium,
+    g_refined,
+    add_sugars
     add_sugars_per = 100 * (ADD_SUGARS * 16 / KCAL), 
     sfat_perc = 100 * (SFAT * 9 / KCAL),
     
