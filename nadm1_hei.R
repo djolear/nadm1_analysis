@@ -13,7 +13,8 @@ SFATMAX=16
 ADDSUGMIN=6.5
 ADDSUGMAX=26
 
-asa_24_total %>% 
+asa_24_total_hei <-
+  asa_24_total %>% 
   filter(KCAL > 0) %>% 
   filter(complete == "Y") %>% 
   filter(subid %!in% low_cals$subid) %>%   
@@ -97,6 +98,7 @@ asa_24_total %>%
              
   ) %>% 
   select(
+    subid,
     health_lm_beta,
     health_glm_beta,
     ses_comp_all,
@@ -106,6 +108,7 @@ asa_24_total %>%
     stai_trait,
     VEGDEN:HEI2015C13_ADDSUG,
     hei
-  ) %>% 
-  cor(., use = "pairwise.complete.obs") %>% 
-  round(. , 2)
+  )
+
+lm1 <- lmer(HEI2015C2_GREEN_AND_BEAN ~ ladd_comm + (1|subid), data = asa_24_total_hei)
+summary(lm1)
