@@ -19,8 +19,8 @@ ssdm2_survey_data_nadm <- read_csv("G:/My Drive/research/projects/ssdm2/ssdm2_gr
 subids <-
   subids %>% 
   filter(complete == "Y") %>% 
-  select(-complete) %>% 
-  mutate(subid = as.numeric(subid))
+  dplyr::select(-complete) %>% 
+  mutate(subid = as.numeric(ssdm2_subid))
 
 # Link subids to asa24
 asa_24 <-
@@ -66,7 +66,7 @@ redcap_ema <-
     ema_survey_timestamp = lubridate::ymd_hms(ema_survey_timestamp),
     weekday = lubridate::wday(ema_survey_timestamp, label = TRUE)
   ) %>% 
-  select(redcap_id = user_name, day, weekday, survey, ema_survey_timestamp:ema_survey_complete) %>% 
+  dplyr::select(redcap_id = user_name, day, weekday, survey, ema_survey_timestamp:ema_survey_complete) %>% 
   filter(!is.na(day))
 
 # Link subids to ema responses
@@ -98,3 +98,4 @@ subs <-
   count(ssdm2_subid)
 
 # 84, 97, 114 have too many
+
