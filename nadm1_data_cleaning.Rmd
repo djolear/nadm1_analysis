@@ -53,14 +53,14 @@ ssdm2_survey_data_nadm <-
 49 is fasting
 
 ```{r}
-low_cals <- asa_24_total %>% filter(complete == "Y") %>% group_by(subid) %>% summarise(cals = mean(KCAL, na.rm = TRUE)) %>% filter(cals < 900)
+low_cals <- asa_24_total  %>% group_by(ssdm2_subid) %>% summarise(cals = mean(KCAL, na.rm = TRUE)) %>% filter(cals < 900)
 ```
 
 
 
 ```{r}
 asa_24_total %>% 
-  filter(complete == "Y") %>% 
+  # filter(complete == "Y") %>% 
   filter(subid %!in% low_cals$subid) %>% 
   dplyr::select(
     ses_comp_all,
@@ -72,6 +72,7 @@ asa_24_total %>%
     stai_trait,
     hese,
     effexp,
+    erq_reap,
     health_lm_beta,
     taste_lm_beta,
     KCAL:A_DRINKS
@@ -95,7 +96,7 @@ asa_24_total %>%
     satfat,
     sodium,
     g_refined,
-    add_sugars
+    add_sugars,
     add_sugars_per = 100 * (ADD_SUGARS * 16 / KCAL), 
     sfat_perc = 100 * (SFAT * 9 / KCAL),
     
@@ -115,6 +116,7 @@ asa_24 %>%
     stai_trait,
     hese,
     effexp,
+    erq_reap,
     health_lm_beta,
     taste_lm_beta,
     KCAL:B12_ADD
@@ -179,9 +181,9 @@ summary(lm1)
 ```{r}
 lm1 <-
   lmer(
-    V_TOTAL ~
-      ladd_comm +
-      (1|subid),
+    I(V_TOTAL/KCAL) ~
+      erq_reap +
+      (1|subid.x),
     data = asa_24_total
   )
 
@@ -295,14 +297,15 @@ redcap_by_day <-
   dplyr::select(
     subid,
     ema_survey_timestamp,
-    anger:motivated
+    anger:motivated,
+    stress_exp
   ) %>% 
   mutate(
-    date = date(ema_survey_timestamp),
+    date = lubridate::date(ema_survey_timestamp),
     subid = as.numeric(subid)
   ) %>% 
   dplyr::select(-ema_survey_timestamp) %>% 
-  gather(emotion, value, anger:motivated) %>% 
+  gather(emotion, value, anger:motivated, stress_exp) %>% 
   group_by(subid, date, emotion) %>% 
   summarise(
     mean = mean(value, na.rm = TRUE)
@@ -400,10 +403,10 @@ by_day %>%
 ```{r}
 lm1 <-
   lmer(
-    V_TOTAL ~
-      ladd_comm +
+    scale(I(V_TOTAL/KCAL)) ~
+      scale(erq_reap) +
       (1|subid) + (1|date),
-    data = by_day
+    data = by_day %>% filter(erq_reap > 19)
   )
 
 summary(lm1)
@@ -538,9 +541,10 @@ coefs %>%
 
 ```{r}
 lm1 <-
-  lm(
-    V_DRKGR ~
-      positive,
+  lmer(
+    KCAL ~
+      worried +
+      (1|subid),
     data = by_day
   )
 

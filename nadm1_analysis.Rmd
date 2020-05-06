@@ -2,87 +2,19 @@
 title: "NADM1 Analysis"
 author: "Daniel O'Leary"
 date: "4/25/2020"
-output: html_document
+output: 
+  github_document:
+  toc: true
 ---
-```{r}
-asa_24_total %>% 
-  filter(KCAL < 1000) %>% 
-  count(subid.x)
+
+# Setup
+
+```{r load pacakges}
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, haven, broom, glmnet, caret, randomForest)
 ```
 
-```{r}
-#he <-
-  asa_24_total %>% 
-  filter(KCAL > 1000) %>% 
-  mutate(
-   VEGDEN = ( V_TOTAL ) / (KCAL / 1000),
-   VGRNDEN = ( V_DRKGR ) / (KCAL / 1000),
-   FDEN = ( F_TOTAL ) / (KCAL / 1000),
-   SUGDEN = ( ADD_SUGARS ) / (KCAL / 1000),
-   GDEN = ( G_WHOLE ) / (KCAL / 1000),
-   GREFDEN = ( G_REFINED ) / (KCAL / 1000),
-   SFDEN = ( SOLID_FATS ) / (KCAL / 1000),
-   CHEESEDEN = ( D_CHEESE ) / (KCAL / 1000),
-   NUTDEN = ( PF_NUTSDS ) / (KCAL / 1000),
-   he = ( scale(VEGDEN) + scale(FDEN) - scale(SUGDEN) + scale(GDEN) - scale(SFDEN) ) /5
-  ) %>% 
-  dplyr::select(
-    subid = subid.x,
-    health_lm_beta,
-    health_glm_beta,
-    KCAL,
-    SUGR,
-    VEGDEN,
-    VGRNDEN,
-    FDEN,
-    SUGDEN,
-    GDEN,
-    GREFDEN,
-    SFDEN,
-    CHEESEDEN,
-    NUTDEN,
-    he,
-    ses_subj_all2,
-    stai_trait,
-    pss,
-    erq_reap,
-    gender
-  ) %>% 
-  cor(., use = "pairwise.complete.obs") %>% 
-  round(., 2)
-```
-
-
-```{r}
-lm1 <-
-  lmer(
-    he ~
-      health_glm_beta +
-      (1|subid),
-    data = he
-  )
-
-summary(lm1)
-```
-
-
-```{r}
-gen_eating_vars <-
-  asa_24_total %>% 
-  filter(!is.na(KCAL)) %>% 
-  dplyr::select(KCAL:A_DRINKS) %>% 
-  scale()
-
-VSS.scree(gen_eating_vars)
-
-ge_pca <- principal(gen_eating_vars, nfactors = 10)
-print(ge_pca)
-
-ge_pca_scores <- data.frame(ge_pca$scores)
-
-df_pca <-
-  bind_cols(
-    df_pca,
-    ge_pca_scores %>% mutate(ge_pc1 = PC1) 
-  )
+```{r load data, warning = FALSE}
+source("G:/My Drive/research/projects/nadm1/nadm1_analysis/nadm1_munge.R")
+source("G:/My Drive/research/projects/nadm1/nadm1_analysis/nadm1_hei.R")
 ```

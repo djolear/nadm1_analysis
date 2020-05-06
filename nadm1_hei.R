@@ -123,32 +123,34 @@ hei <-
   ) %>% 
   dplyr::select(
     subid ,
-    ReportingDate,
+    #ReportingDate,
     health_lm_beta,
     health_glm_beta,
     ses_subj_all2,
-    hese,
-    effexp,
-    stai_trait,
-    pss,
-    cesd,
-    panas_neg,
+    # hese,
+    # effexp,
+    # stai_trait,
+    # pss,
+    # cesd,
+    # panas_neg,
     erq_reap,
     erq_10,
     hei,
     he,
     gender,
-    veg,
-    neg,
-    bmi,
-    tfeq_cr,
-    eth,
-    VEGDEN:HEI2015C13_ADDSUG,
-    AmtUsual
+    # veg,
+    # neg,
+    # bmi,
+    # tfeq_cr,
+    # eth,
+    # starts_with("gen_eating")
+    KCAL,
+    VEGDEN:he,
+    #AmtUsual
 
   )  %>% 
   mutate(
-    wday = as.factor(lubridate::wday(lubridate::mdy(stringr::str_replace(stringr::str_replace(ReportingDate, "/", "-"), "/", "-"))))
+    #wday = as.factor(lubridate::wday(lubridate::mdy(stringr::str_replace(stringr::str_replace(ReportingDate, "/", "-"), "/", "-"))))
   )
 
 hei %>% 
@@ -161,7 +163,11 @@ hei <-
     ssdm2_ddm
   )
 
-lm1 <- lmer(hei ~ HealthWeight + as.factor(gender) + AmtUsual + (1|subid), data = hei)
+lm1 <- lmer(hei ~ HealthWeight +  (1|subid), data = hei)
+lm1 <- lmer(scale(he) ~ scale(HealthWeight) + scale(TasteWeight)  + (1|subid), data = hei)
+lm1 <- lm(VEGDEN ~ erq_reap, data = hei)
+
 lm1 <- lm(hei ~ HealthWeight , data = hei)
 
 summary(lm1)
+
