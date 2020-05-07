@@ -29,4 +29,20 @@ erdm_nadm_demog %>%
   )
 ```
 
+## Graph
+
+```{r}
+hei %>% 
+  filter(HealthWeight > -0.01) %>% 
+  ggplot(aes(HealthWeight, he)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw() +
+  labs(
+    x = "health weight",
+    y = "health eating metric"
+  )
+```
+
+
 
